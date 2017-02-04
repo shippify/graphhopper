@@ -1,4 +1,6 @@
 global.d3 = require('d3');
+var Flatpickr = require('flatpickr');
+
 var L = require('leaflet');
 require('leaflet-contextmenu');
 require('leaflet-loading');
@@ -41,7 +43,7 @@ var translate = require('./translate.js');
 
 var format = require('./tools/format.js');
 var urlTools = require('./tools/url.js');
-var vehicle = require('./tools/vehicle.js');
+var vehicleTools = require('./tools/vehicle.js');
 var tileLayers = require('./config/tileLayers.js');
 
 var debug = false;
@@ -131,9 +133,12 @@ $(document).ready(function (e) {
                     // car, foot and bike should come first. mc comes last
                     var prefer = {"car": 1, "foot": 2, "bike": 3, "motorcycle": 10000};
                     var showAllVehicles = urlParams.vehicle && (!prefer[urlParams.vehicle] || prefer[urlParams.vehicle] > 3);
-                    var vehicles = vehicle.getSortedVehicleKeys(json.features, prefer);
+                    var vehicles = vehicleTools.getSortedVehicleKeys(json.features, prefer);
                     if (vehicles.length > 0)
                         ghRequest.initVehicle(vehicles[0]);
+
+                    if (!ghRequest.isPublicTransit())
+                        $(".time_input").hide();
 
                     var hiddenVehicles = [];
                     for (var i in vehicles) {
@@ -212,14 +217,21 @@ $(document).ready(function (e) {
 
 function initFromParams(params, doQuery) {
     ghRequest.init(params);
+
+    var flatpickr = new Flatpickr(document.getElementById("input_date_0"), {
+        // utc: true,
+        defaultDate: new Date(),
+        allowInput: true, /* somehow then does not sync!? */
+        minuteIncrement: 15,
+        time_24hr: true,
+        enableTime: true,
+        // altInput: true,
+        // altFormat: "F j, H:i"
+    });
+
     if (ghRequest.getEarliestDepartureTime()) {
-        // TODO set
-    } else {
-        $("#input_date_0").val(moment().date());
-        $("#input_month_0").val(moment().month()+1);
-        $("#input_year_0").val(moment().year());
-        $("#input_hour_0").val(moment().hour());
-        $("#input_min_0").val(moment().minute());
+        var localDate = moment.utc(ghRequest.getEarliestDepartureTime(), 'YYYY-MM-DDTHH:mm').local().format("YYYY-MM-DD HH:mm");
+        flatpickr.setDate(localDate);
     }
 
     var count = 0;
@@ -453,14 +465,12 @@ function resolveAll() {
     for (var i = 0, l = ghRequest.route.size(); i < l; i++) {
         ret[i] = resolveIndex(i);
     }
-    ghRequest.setEarliestDepartureTime(
-        moment()
-            .date($("#input_date_0").val())
-            .month($("#input_month_0").val()-1)
-            .year($("#input_year_0").val())
-            .hour($("#input_hour_0").val())
-            .minute($("#input_min_0").val())
-            .format("YYYY-MM-DDTHH:mm"));
+
+    if(ghRequest.isPublicTransit())
+        ghRequest.setEarliestDepartureTime(
+            moment($("#input_date_0").val(), 'YYYY-MM-DD HH:mm').utc().
+            format("YYYY-MM-DDTHH:mm"));
+
     return ret;
 }
 
@@ -613,12 +623,22 @@ function routeLatLng(request, doQuery) {
                 routeInfo.append("<br/>");
             }
 
-            routeInfo.append("Arrives at "
-                + moment(ghRequest.getEarliestDepartureTime())
-                    .add(path.time, 'milliseconds')
-                    .format('LT')
-                + " with " + path.transfers + " transfers "
-                + "(" + translate.createDistanceString(path.distance, request.useMiles) + ")");
+            var tempDistance = translate.createDistanceString(path.distance, request.useMiles);
+            var tempRouteInfo;
+            if(request.isPublicTransit()) {
+                var tempArrTime = moment(ghRequest.getEarliestDepartureTime())
+                                        .add(path.time, 'milliseconds')
+                                        .format('LT');
+                if(path.transfers < 0)
+                    tempRouteInfo = translate.tr("pt_route_info", [tempArrTime, path.transfers, tempDistance]);
+                else
+                    tempRouteInfo = translate.tr("pt_route_info_walking", [tempArrTime, tempDistance]);
+            } else {
+                var tmpDuration = translate.createTimeString(path.time);
+                tempRouteInfo = translate.tr("route_info", [tempDistance, tmpDuration]);
+            }
+
+            routeInfo.append(tempRouteInfo);
 
             var kmButton = $("<button class='plain_text_button " + (request.useMiles ? "gray" : "") + "'>");
             kmButton.text(translate.tr2("km_abbr"));

@@ -148,6 +148,10 @@ GHRequest.prototype.getVehicle = function () {
     return this.api_params.vehicle;
 };
 
+GHRequest.prototype.isPublicTransit = function () {
+    return this.getVehicle() === "pt";
+};
+
 GHRequest.prototype.createGeocodeURL = function (host, prevIndex) {
     var tmpHost = this.host;
     if (host)

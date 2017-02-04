@@ -36,6 +36,7 @@ public class Instruction {
     public static final int IGNORE = Integer.MIN_VALUE;
     public static final int KEEP_LEFT = -7;
     public static final int KEEP_RIGHT = 7;
+    public static final int UNKNOWN = -99;
     public static final int PT_START_TRIP = 101;
     public static final int PT_TRANSFER = 102;
     public static final int PT_END_TRIP = 103;
