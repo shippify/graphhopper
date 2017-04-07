@@ -9,6 +9,7 @@ turn_slight_right=xira llixeramente a la drecha
 turn_sharp_left=xira fuerte a la izquierda
 turn_sharp_right=xira fuerte a la drecha
 turn_onto=%1$s per %2$s
+unknown=
 web.search_button=Buscar
 web.from_hint=Dende
 web.via_hint=Pasando per

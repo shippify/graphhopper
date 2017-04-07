@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 public class Instruction {
+    public static final int UNKNOWN = -99;
     public static final int LEAVE_ROUNDABOUT = -6; // for future use
     public static final int TURN_SHARP_LEFT = -3;
     public static final int TURN_LEFT = -2;
@@ -36,7 +37,6 @@ public class Instruction {
     public static final int IGNORE = Integer.MIN_VALUE;
     public static final int KEEP_LEFT = -7;
     public static final int KEEP_RIGHT = 7;
-    public static final int UNKNOWN = -99;
     public static final int PT_START_TRIP = 101;
     public static final int PT_TRANSFER = 102;
     public static final int PT_END_TRIP = 103;
@@ -276,9 +276,9 @@ public class Instruction {
                     break;
             }
             if (dir == null)
-                throw new IllegalStateException("Turn indication not found " + indi);
-
-            str = Helper.isEmpty(streetName) ? dir : tr.tr("turn_onto", dir, streetName);
+                str = tr.tr("unknown", indi);
+            else
+                str = Helper.isEmpty(streetName) ? dir : tr.tr("turn_onto", dir, streetName);
         }
         return str;
     }

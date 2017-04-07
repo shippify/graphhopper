@@ -9,6 +9,7 @@ turn_slight_right=מעט ימינה
 turn_sharp_left=שמאלה בחדות
 turn_sharp_right=ימינה בחדות
 turn_onto=יש לפנות %1$s לתוך %2$s
+unknown=
 web.search_button=חיפוש
 web.from_hint=מוצא
 web.via_hint=דרך

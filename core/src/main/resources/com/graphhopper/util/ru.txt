@@ -9,6 +9,7 @@ turn_slight_right=Поверните немного правее
 turn_sharp_left=Поверните резко налево
 turn_sharp_right=Поверните резко направо
 turn_onto=%1$s на %2$s
+unknown=
 web.search_button=Поиск
 web.from_hint=От
 web.via_hint=Через

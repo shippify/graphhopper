@@ -9,6 +9,7 @@ turn_slight_right=vire à curva ligeira à direita
 turn_sharp_left=vire à curva apertada à esquerda
 turn_sharp_right=vire à curva apertada à direita
 turn_onto=%1$s para %2$s
+unknown=
 web.search_button=Pesquisar
 web.from_hint=De
 web.via_hint=Por

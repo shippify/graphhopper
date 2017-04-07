@@ -9,6 +9,7 @@ turn_slight_right=gira lleugerament a la dreta
 turn_sharp_left=gira just a l'esquerra
 turn_sharp_right=gira just a la dreta
 turn_onto=%1$s per %2$s
+unknown=
 web.search_button=Buscar
 web.from_hint=Des de
 web.via_hint=passant per

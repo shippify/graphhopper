@@ -9,6 +9,7 @@ turn_slight_right=إستدر لليمين قليلا
 turn_sharp_left=اتجه كليلاً لليسار
 turn_sharp_right=اتجه كليلاً لليمين
 turn_onto=%1$s خلال %1$s
+unknown=
 web.search_button=ابحث
 web.from_hint=من
 web.via_hint=خلال

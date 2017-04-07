@@ -9,6 +9,7 @@ turn_slight_right=skręć delikatnie w prawo
 turn_sharp_left=skręć ostro w lewo
 turn_sharp_right=skręć ostro w prawo
 turn_onto=%1$s na %2$s
+unknown=
 web.search_button=Szukaj
 web.from_hint=Z
 web.via_hint=Przez

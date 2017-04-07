@@ -9,6 +9,7 @@ turn_slight_right=käänny loivasti oikealle
 turn_sharp_left=käänny jyrkästi vasemmalle
 turn_sharp_right=käänny jyrkästi oikealle
 turn_onto=%1$S tielle %2$S
+unknown=
 web.search_button=Etsi
 web.from_hint=Lähtöpaikka
 web.via_hint=Reittipiste

@@ -9,6 +9,7 @@ turn_slight_right=schimbați direcția la ușor la dreapta
 turn_sharp_left=schimbați direcția la brusc la stânga
 turn_sharp_right=schimbați direcția la brusc la dreapta
 turn_onto=%1$s pe %2$s
+unknown=
 web.search_button=Caută
 web.from_hint=De la
 web.via_hint=Prin
