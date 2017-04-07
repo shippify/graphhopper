@@ -629,7 +629,7 @@ function routeLatLng(request, doQuery) {
                 var tempArrTime = moment(ghRequest.getEarliestDepartureTime())
                                         .add(path.time, 'milliseconds')
                                         .format('LT');
-                if(path.transfers < 0)
+                if(path.transfers >= 0)
                     tempRouteInfo = translate.tr("pt_route_info", [tempArrTime, path.transfers, tempDistance]);
                 else
                     tempRouteInfo = translate.tr("pt_route_info_walking", [tempArrTime, tempDistance]);
