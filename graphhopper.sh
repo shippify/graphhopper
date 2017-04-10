@@ -1,5 +1,5 @@
 #!/bin/bash
-(set -o igncr) 2>/dev/null && set -o igncr; # this comment is required for handling Windows cr/lf 
+(set -o igncr) 2>/dev/null && set -o igncr; # this comment is required for handling Windows cr/lf
 # See StackOverflow answer http://stackoverflow.com/a/14607651
 
 GH_CLASS=com.graphhopper.tools.Import
@@ -42,11 +42,19 @@ function printUsage {
 }
 
 if [ "$ACTION" = "" ]; then
- echo "## action $ACTION not found. try" 
+ echo "## action $ACTION not found. try"
  printUsage
 fi
 
-function ensureOsmXml { 
+function useS3Download {
+  if [ ! -z "$S3_LOCATION" ]; then
+    if [ ! -s "$OSM_FILE" ]; then
+      aws s3 cp $S3_LOCATION $OSM_FILE
+    fi
+  fi
+}
+
+function ensureOsmXml {
   if [ "$OSM_FILE" = "" ]; then
     # skip
     return
@@ -54,21 +62,21 @@ function ensureOsmXml {
     echo "File not found '$OSM_FILE'. Press ENTER to get it from: $LINK"
     echo "Press CTRL+C if you do not have enough disc space or you don't want to download several MB."
     read -e
-      
+
     echo "## now downloading OSM file from $LINK and extracting to $OSM_FILE"
-    
+
     if [ ${OSM_FILE: -4} == ".pbf" ]; then
        wget -S -nv -O "$OSM_FILE" "$LINK"
     elif [ ${OSM_FILE: -4} == ".ghz" ]; then
        wget -S -nv -O "$OSM_FILE" "$LINK"
        unzip "$FILE" -d "$NAME-gh"
-    else    
+    else
        # make sure aborting download does not result in loading corrupt osm file
        TMP_OSM=temp.osm
        wget -S -nv -O - "$LINK" | bzip2 -d > $TMP_OSM
        mv $TMP_OSM "$OSM_FILE"
     fi
-  
+
     if [[ ! -s "$OSM_FILE" ]]; then
       echo "ERROR couldn't download or extract OSM file $OSM_FILE ... exiting"
       exit
@@ -115,11 +123,11 @@ function packageCoreJar {
     echo "## building parent"
     execMvn --non-recursive install
   fi
-  
+
   if [ ! -f "$JAR" ]; then
     echo "## now building graphhopper jar: $JAR"
     echo "## using maven at $MAVEN_HOME"
-    
+
     execMvn --projects tools -am -DskipTests=true install
     execMvn --projects tools -DskipTests=true install assembly:single
   else
@@ -128,9 +136,9 @@ function packageCoreJar {
 }
 
 function prepareEclipse {
- ensureMaven   
+ ensureMaven
  packageCoreJar
- # cp core/target/graphhopper-*-android.jar android/libs/   
+ # cp core/target/graphhopper-*-android.jar android/libs/
 }
 
 
@@ -147,8 +155,8 @@ elif [ "$ACTION" = "eclipse" ]; then
 
 elif [ "$ACTION" = "build" ]; then
  prepareEclipse
- exit  
- 
+ exit
+
 elif [ "$ACTION" = "buildweb" ]; then
  prepareEclipse
  execMvn --projects web -DskipTests=true install assembly:single
@@ -160,7 +168,7 @@ elif [ "$ACTION" = "extract" ]; then
  #echo "$URL"
  wget -O extract.osm "$URL"
  exit
- 
+
 elif [ "$ACTION" = "android" ]; then
  prepareEclipse
  "$MAVEN_HOME/bin/mvn" -P include-android --projects android/app install android:deploy android:run
@@ -204,10 +212,10 @@ JAR=tools/target/graphhopper-tools-$VERSION-jar-with-dependencies.jar
 LINK=$(echo $NAME | tr '_' '/')
 if [ "$FILE" == "-" ]; then
    LINK=
-elif [ ${FILE: -4} == ".osm" ]; then 
+elif [ ${FILE: -4} == ".osm" ]; then
    LINK="http://download.geofabrik.de/$LINK-latest.osm.bz2"
 elif [ ${FILE: -4} == ".ghz" ]; then
-   LINK="http://graphhopper.com/public/maps/0.1/$FILE"      
+   LINK="http://graphhopper.com/public/maps/0.1/$FILE"
 elif [ ${FILE: -4} == ".pbf" ]; then
    LINK="http://download.geofabrik.de/$LINK-latest.osm.pbf"
 else
@@ -219,7 +227,7 @@ if [ "$JAVA_OPTS" = "" ]; then
   JAVA_OPTS="-Xmx1000m -Xms1000m -server"
 fi
 
-
+useS3Download
 ensureOsmXml
 ensureMaven
 packageCoreJar
@@ -228,11 +236,11 @@ echo "## now $ACTION. JAVA_OPTS=$JAVA_OPTS"
 
 if [ "$ACTION" = "ui" ] || [ "$ACTION" = "web" ]; then
   export MAVEN_OPTS="$MAVEN_OPTS $JAVA_OPTS"
-  if [ "$JETTY_PORT" = "" ]; then  
+  if [ "$JETTY_PORT" = "" ]; then
     JETTY_PORT=8989
   fi
   WEB_JAR="$GH_HOME/web/target/graphhopper-web-$VERSION-with-dep.jar"
-  if [ ! -s "$WEB_JAR" ]; then         
+  if [ ! -s "$WEB_JAR" ]; then
     execMvn --projects web -DskipTests=true install assembly:single
   fi
 
@@ -250,7 +258,7 @@ if [ "$ACTION" = "ui" ] || [ "$ACTION" = "web" ]; then
     if [ "$GH_PID_FILE" != "" ]; then
        echo $! > $GH_PID_FILE
     fi
-    exit $?                    
+    exit $?
   fi
 
 elif [ "$ACTION" = "import" ]; then
@@ -264,7 +272,7 @@ elif [ "$ACTION" = "torture" ]; then
 
 elif [ "$ACTION" = "miniui" ]; then
  "$MAVEN_HOME/bin/mvn" --projects tools -DskipTests clean install assembly:single
- JAR=tools/target/graphhopper-tools-$VERSION-jar-with-dependencies.jar   
+ JAR=tools/target/graphhopper-tools-$VERSION-jar-with-dependencies.jar
  "$JAVA" $JAVA_OPTS -cp "$JAR" com.graphhopper.ui.MiniGraphUI datareader.file="$OSM_FILE" config=$CONFIG \
               graph.location="$GRAPH"
 
@@ -285,11 +293,11 @@ elif [ "$ACTION" = "measurement" ]; then
     "$JAVA" $JAVA_OPTS -cp "$JAR" com.graphhopper.tools.Measurement $ARGS measurement.count=$COUNT measurement.location="$M_FILE_NAME" \
             measurement.gitinfo="$commit_info"
  }
- 
- 
+
+
  # use all <last_commits> versions starting from HEAD
  last_commits=$3
-  
+
  if [ "$last_commits" = "" ]; then
    # use current version
    "$MAVEN_HOME/bin/mvn" --projects tools -DskipTests clean install assembly:single
@@ -304,7 +312,7 @@ elif [ "$ACTION" = "measurement" ]; then
    M_FILE_NAME=$(git log -n 1 --pretty=oneline | grep -o "\ .*" |  tr " ,;" "_")
    M_FILE_NAME="measurement$M_FILE_NAME.properties"
    echo -e "\nusing commit $commit and $M_FILE_NAME"
-   
+
    "$MAVEN_HOME/bin/mvn" --projects tools -DskipTests clean install assembly:single
    startMeasurement
    echo -e "\nmeasurement.commit=$commit\n" >> "$M_FILE_NAME"
