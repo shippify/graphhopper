@@ -1,5 +1,5 @@
 #!/bin/bash
-(set -o igncr) 2>/dev/null && set -o igncr; # this comment is required for handling Windows cr/lf 
+(set -o igncr) 2>/dev/null && set -o igncr; # this comment is required for handling Windows cr/lf
 # See StackOverflow answer http://stackoverflow.com/a/14607651
 
 GH_HOME=$(dirname "$0")
@@ -82,6 +82,7 @@ if [ -z $FILE ]; then
 fi
 
 if [ "$ACTION" = "" ]; then
+<<<<<<< HEAD
  echo "## action $ACTION not found!"
  printBashUsage
 fi
@@ -98,30 +99,55 @@ if [ ! -f "config.yml" ]; then
 fi
 
 function ensureOsm { 
+=======
+ echo "## action $ACTION not found. try"
+ printUsage
+fi
+
+function useS3Download {
+  if [ ! -z "$S3_LOCATION" ]; then
+    if [ ! -s "$OSM_FILE" ]; then
+      aws s3 cp $S3_LOCATION $OSM_FILE
+    fi
+  fi
+}
+
+function ensureOsmXml {
+>>>>>>> 327f826a3... Modify script to download maps from s3
   if [ "$OSM_FILE" = "" ]; then
     # skip
     return
   elif [ ! -s "$OSM_FILE" ]; then
+<<<<<<< HEAD
     if [ -z $FORCE_DWN ]; then
       echo "File not found '$OSM_FILE'. Press ENTER to get it from: $LINK"
       echo "Press CTRL+C if you do not have enough disc space or you don't want to download several MB."
       read -e
     fi
+=======
+    echo "File not found '$OSM_FILE'. Press ENTER to get it from: $LINK"
+    echo "Press CTRL+C if you do not have enough disc space or you don't want to download several MB."
+    read -e
+>>>>>>> 327f826a3... Modify script to download maps from s3
 
     echo "## now downloading OSM file from $LINK and extracting to $OSM_FILE"
-    
+
     if [ ${OSM_FILE: -4} == ".pbf" ]; then
        wget -S -nv -O "$OSM_FILE" "$LINK"
     elif [ ${OSM_FILE: -4} == ".ghz" ]; then
        wget -S -nv -O "$OSM_FILE" "$LINK"
+<<<<<<< HEAD
        cd $DATADIR && unzip "$BASENAME" -d "$NAME-gh"
+=======
+       unzip "$FILE" -d "$NAME-gh"
+>>>>>>> 327f826a3... Modify script to download maps from s3
     else
        # make sure aborting download does not result in loading corrupt osm file
        TMP_OSM=temp.osm
        wget -S -nv -O - "$LINK" | bzip2 -d > $TMP_OSM
        mv $TMP_OSM "$OSM_FILE"
     fi
-  
+
     if [[ ! -s "$OSM_FILE" ]]; then
       echo "ERROR couldn't download or extract OSM file $OSM_FILE ... exiting"
       exit
@@ -162,17 +188,41 @@ function execMvn {
   fi
 }
 
+<<<<<<< HEAD
 function packageJar {
+=======
+function packageCoreJar {
+  if [ ! -d "./target" ]; then
+    echo "## building parent"
+    execMvn --non-recursive install
+  fi
+
+>>>>>>> 327f826a3... Modify script to download maps from s3
   if [ ! -f "$JAR" ]; then
     echo "## building graphhopper jar: $JAR"
     echo "## using maven at $MAVEN_HOME"
+<<<<<<< HEAD
     execMvn --projects web -am -DskipTests=true package
+=======
+
+    execMvn --projects tools -am -DskipTests=true install
+    execMvn --projects tools -DskipTests=true install assembly:single
+>>>>>>> 327f826a3... Modify script to download maps from s3
   else
     echo "## existing jar found $JAR"
   fi
 }
 
+<<<<<<< HEAD
 ensureMaven
+=======
+function prepareEclipse {
+ ensureMaven
+ packageCoreJar
+ # cp core/target/graphhopper-*-android.jar android/libs/
+}
+
+>>>>>>> 327f826a3... Modify script to download maps from s3
 
 ## now handle actions which do not take an OSM file
 if [ "$ACTION" = "clean" ]; then
@@ -182,8 +232,30 @@ if [ "$ACTION" = "clean" ]; then
  exit
 
 elif [ "$ACTION" = "build" ]; then
+<<<<<<< HEAD
  packageJar
  exit  
+=======
+ prepareEclipse
+ exit
+
+elif [ "$ACTION" = "buildweb" ]; then
+ prepareEclipse
+ execMvn --projects web -DskipTests=true install assembly:single
+ exit
+
+elif [ "$ACTION" = "extract" ]; then
+ echo use "./graphhopper.sh extract \"left,bottom,right,top\""
+ URL="http://overpass-api.de/api/map?bbox=$2"
+ #echo "$URL"
+ wget -O extract.osm "$URL"
+ exit
+
+elif [ "$ACTION" = "android" ]; then
+ prepareEclipse
+ "$MAVEN_HOME/bin/mvn" -P include-android --projects android/app install android:deploy android:run
+ exit
+>>>>>>> 327f826a3... Modify script to download maps from s3
 fi
  
 if [ "$FILE" = "" ]; then
@@ -223,10 +295,14 @@ fi
 LINK=$(echo $NAME | tr '_' '/')
 if [ "$FILE" == "-" ]; then
    LINK=
-elif [ ${FILE: -4} == ".osm" ]; then 
+elif [ ${FILE: -4} == ".osm" ]; then
    LINK="http://download.geofabrik.de/$LINK-latest.osm.bz2"
 elif [ ${FILE: -4} == ".ghz" ]; then
+<<<<<<< HEAD
    LINK="https://graphhopper.com/public/maps/0.1/$FILE"
+=======
+   LINK="http://graphhopper.com/public/maps/0.1/$FILE"
+>>>>>>> 327f826a3... Modify script to download maps from s3
 elif [ ${FILE: -4} == ".pbf" ]; then
    LINK="http://download.geofabrik.de/$LINK-latest.osm.pbf"
 else
@@ -234,17 +310,29 @@ else
    LINK="http://download.geofabrik.de/$LINK-latest.osm.pbf"
 fi
 
+<<<<<<< HEAD
 : "${JAVA_OPTS:=-Xmx1000m -Xms1000m}"
 : "${JAR:=web/target/graphhopper-web-$VERSION.jar}"
 : "${GRAPH:=$DATADIR/$NAME-gh}"
 
 ensureOsm
 packageJar
+=======
+if [ "$JAVA_OPTS" = "" ]; then
+  JAVA_OPTS="-Xmx1000m -Xms1000m -server"
+fi
+
+useS3Download
+ensureOsmXml
+ensureMaven
+packageCoreJar
+>>>>>>> 327f826a3... Modify script to download maps from s3
 
 echo "## now $ACTION. JAVA_OPTS=$JAVA_OPTS"
 
 if [[ "$ACTION" = "web" ]]; then
   export MAVEN_OPTS="$MAVEN_OPTS $JAVA_OPTS"
+<<<<<<< HEAD
   if [[ "$RUN_BACKGROUND" == "true" ]]; then
     exec "$JAVA" $JAVA_OPTS -Dgraphhopper.datareader.file="$OSM_FILE" -Dgraphhopper.graph.location="$GRAPH" \
                  $GH_WEB_OPTS -jar "$JAR" server $CONFIG <&- &
@@ -258,6 +346,31 @@ if [[ "$ACTION" = "web" ]]; then
     exec "$JAVA" $JAVA_OPTS -Dgraphhopper.datareader.file="$OSM_FILE" -Dgraphhopper.graph.location="$GRAPH" \
                  $GH_WEB_OPTS -jar "$JAR" server $CONFIG
     # foreground => we never reach this here
+=======
+  if [ "$JETTY_PORT" = "" ]; then
+    JETTY_PORT=8989
+  fi
+  WEB_JAR="$GH_HOME/web/target/graphhopper-web-$VERSION-with-dep.jar"
+  if [ ! -s "$WEB_JAR" ]; then
+    execMvn --projects web -DskipTests=true install assembly:single
+  fi
+
+  RC_BASE=./web/src/main/webapp
+
+  if [ "$GH_FOREGROUND" = "" ]; then
+    exec "$JAVA" $JAVA_OPTS -jar "$WEB_JAR" jetty.resourcebase=$RC_BASE \
+	jetty.port=$JETTY_PORT jetty.host=$JETTY_HOST \
+    	config=$CONFIG $GH_WEB_OPTS graph.location="$GRAPH" datareader.file="$OSM_FILE"
+    # foreground => we never reach this here
+  else
+    exec "$JAVA" $JAVA_OPTS -jar "$WEB_JAR" jetty.resourcebase=$RC_BASE \
+    	jetty.port=$JETTY_PORT jetty.host=$JETTY_HOST \
+    	config=$CONFIG $GH_WEB_OPTS graph.location="$GRAPH" datareader.file="$OSM_FILE" <&- &
+    if [ "$GH_PID_FILE" != "" ]; then
+       echo $! > $GH_PID_FILE
+    fi
+    exit $?
+>>>>>>> 327f826a3... Modify script to download maps from s3
   fi
 
 elif [ "$ACTION" = "import" ]; then
@@ -265,9 +378,21 @@ elif [ "$ACTION" = "import" ]; then
          $GH_IMPORT_OPTS -jar "$JAR" import $CONFIG
 
 elif [ "$ACTION" = "torture" ]; then
+<<<<<<< HEAD
   execMvn --projects tools -am -DskipTests clean package
   JAR=tools/target/graphhopper-tools-$VERSION-jar-with-dependencies.jar
   "$JAVA" $JAVA_OPTS -cp "$JAR" com.graphhopper.tools.QueryTorture $@
+=======
+ "$JAVA" $JAVA_OPTS -cp "$JAR" com.graphhopper.tools.QueryTorture $@
+
+
+elif [ "$ACTION" = "miniui" ]; then
+ "$MAVEN_HOME/bin/mvn" --projects tools -DskipTests clean install assembly:single
+ JAR=tools/target/graphhopper-tools-$VERSION-jar-with-dependencies.jar
+ "$JAVA" $JAVA_OPTS -cp "$JAR" com.graphhopper.ui.MiniGraphUI datareader.file="$OSM_FILE" config=$CONFIG \
+              graph.location="$GRAPH"
+
+>>>>>>> 327f826a3... Modify script to download maps from s3
 
 elif [ "$ACTION" = "measurement" ]; then
   ARGS="$GH_WEB_OPTS graph.location=$GRAPH datareader.file=$OSM_FILE prepare.ch.weightings=fastest prepare.lm.weightings=fastest graph.flag_encoders=car \
@@ -282,11 +407,11 @@ elif [ "$ACTION" = "measurement" ]; then
     "$JAVA" $JAVA_OPTS -cp "$JAR" com.graphhopper.tools.Measurement $ARGS measurement.count=$COUNT measurement.location="$M_FILE_NAME" \
             measurement.gitinfo="$commit_info"
  }
- 
- 
+
+
  # use all <last_commits> versions starting from HEAD
  last_commits=$3
-  
+
  if [ "$last_commits" = "" ]; then
    startMeasurement
    exit
@@ -299,7 +424,12 @@ elif [ "$ACTION" = "measurement" ]; then
    M_FILE_NAME=$(git log -n 1 --pretty=oneline | grep -o "\ .*" |  tr " ,;" "_")
    M_FILE_NAME="measurement$M_FILE_NAME.properties"
    echo -e "\nusing commit $commit and $M_FILE_NAME"
+<<<<<<< HEAD
    
+=======
+
+   "$MAVEN_HOME/bin/mvn" --projects tools -DskipTests clean install assembly:single
+>>>>>>> 327f826a3... Modify script to download maps from s3
    startMeasurement
    echo -e "\nmeasurement.commit=$commit\n" >> "$M_FILE_NAME"
  done
