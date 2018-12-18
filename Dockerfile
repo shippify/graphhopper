@@ -4,8 +4,8 @@ ENV JAVA_OPTS "-server -Xconcurrentio -Xmx1g -Xms1g -XX:+UseG1GC -XX:MetaspaceSi
 
 RUN mkdir -p /data && \
     mkdir -p /graphhopper
-    
-RUN apt-get upgrade
+
+#RUN apt-get upgrade
 RUN apt-get update
 RUN apt-get -y install python-pip
 RUN pip install awscli
