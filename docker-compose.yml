@@ -1,0 +1,24 @@
+version: "3"
+services:
+  graphhopper:
+   container_name: graphhopper
+   build: ./../graphhopper/.
+   environment:
+    - OSM_FILE=/data/shippify.pbf
+    - JAVA_OPTS=-XX:-UseGCOverheadLimit -Xms512m -Xmx4096m -server -Djava.net.preferIPv4Stack=true -Djava.awt.headless=true -Xconcurrentio
+    - AWS_ACCESS_KEY_ID=AKIAIGWHO3P7YAHPJUCQ
+    - AWS_SECRET_ACCESS_KEY=8ISlFfd7loPqrVHWHAjqxsStm7m1Uf
+    - S3_LOCATION=s3://shippify-backups/routing_server/shippify.pbf
+   volumes:
+    - ./../Routing-Server/graphhopper/data:/data
+    - ./../Routing-Server/graphhopper/config.properties:/graphhopper/config.properties
+    - ./../Routing-Server/graphhopper/supervisord.conf:/etc/supervisor/conf.d/supervisord.conf
+   ports:
+    - "8989:8989"
+    - "9005:9001"
+   command: supervisord
+   networks:
+    - shippify-server_shippify-net
+networks:
+  shippify-server_shippify-net:
+    external: true
